@@ -509,10 +509,15 @@ function getAssets(address, callback){
                     //var assetdescription = data.data[i].description
                         if (data.data[i].amount.indexOf(".")==-1) {var divisible = "no"} else {var divisible = "yes"}
 
+                        var dispname = null;
                         if(assetname.substr(0,1) != "A") {
-                            $("#assetDropdown").append("<div style='width: 320px; padding: 5px;'><div class='row assetDropdownItem'><div class='col-xs-2'><div class='assetDropdownItem-icon'>"+assetIcon(assetname, 'small')+"</div></div><div class='col-xs-10'><div class='assetDropdownItem-name' data-divisible='"+divisible+"'>"+assetname+"</div><div class='assetDropdownItem-balance'>"+assetbalance+"</div></div></div></div>")
+                            dispname = assetname;
+                        } else {
+                            dispname = data.data[i].asset_longname;
                         }
-                        
+                        if (dispname) {
+                            $("#assetDropdown").append("<div style='width: 320px; padding: 5px;'><div class='row assetDropdownItem'><div class='col-xs-2'><div class='assetDropdownItem-icon'>"+assetIcon(assetname, 'small')+"</div></div><div class='col-xs-10'><div class='assetDropdownItem-name' data-divisible='"+divisible+"' data-asset='"+assetname+"'>"+dispname+"</div><div class='assetDropdownItem-balance'>"+assetbalance+"</div></div></div></div>")
+                        }
                     }
                     
                 })
@@ -850,7 +855,7 @@ function balanceClickModal(){
 
 }
 
-function assetMenuModal(asset, divisible, balance){
+function assetMenuModal(asset, asset_longname, divisible, balance){
     var currentaddr = $("#addressCurrent").data("address")
 
     var assetMenuDialog = new BootstrapDialog({
@@ -867,15 +872,15 @@ function assetMenuModal(asset, divisible, balance){
             },
         buttons: [
             {
-                label: 'Send '+asset,
+                label: 'Send '+asset_longname,
                 cssClass: 'btn-success',
                 action: function(dialogItself) {
-                    sendAssetModal(asset, divisible, balance)
+                    sendAssetModal(asset, asset_longname, divisible, balance)
                     dialogItself.close()
                 } 
             },
             {
-                label: 'Sell '+asset,
+                label: 'Sell '+asset_longname,
                 cssClass: 'btn-warning',
                 action: function(dialogItself) {
                     
@@ -883,7 +888,7 @@ function assetMenuModal(asset, divisible, balance){
                     
                     if(btcbalance >= 0.0001){
 
-                        sellAssetModal(asset, divisible, balance)
+                        sellAssetModal(asset, asset_longname, divisible, balance)
                         dialogItself.close()
 
                     } else {
@@ -899,7 +904,7 @@ function assetMenuModal(asset, divisible, balance){
     assetMenuDialog.open()    
 }
 
-function sendAssetModal(asset, divisible, balance){
+function sendAssetModal(asset, asset_longname, divisible, balance){
     
     var btcbalance = $("#btcBalance").html()
     
