@@ -566,7 +566,7 @@ function buyAssetModal(tx_index, owner){
     console.log(maxasset)
     
     
-    var orderLink = "ticketcounter.monaco-ex.com/?i="+thisorder.tx_index
+    var orderLink = "ticket-counter.monaco-ex.com/?i="+thisorder.tx_index
     var shareText = "Buy "+asset_longname+" for "+btcperasset+" "+BTC+" at " + orderLink
 
     var buyAssetDialog = new BootstrapDialog({
