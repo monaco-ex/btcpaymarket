@@ -184,7 +184,7 @@ $( document ).ready(function() {
     $(document).on("click", '.unconfirmedTx', function (event) {
         
         var txid = $(this).data("txid")
-        var url = 'https://chain.so/tx/BTC/'+txid
+        var url = INSIGHT_SERVER+'/tx/'+txid
     
         window.open(url)
         
@@ -227,11 +227,12 @@ $( document ).ready(function() {
     
     $(document).on("click", '.assetDropdownItem', function (event) {
         
-        var asset = $(this).find('.assetDropdownItem-name').html()
+        var asset_longname = $(this).find('.assetDropdownItem-name').html()
+        var asset = $(this).find('.assetDropdownItem-name').data("asset")
         var divisible = $(this).find('.assetDropdownItem-name').data("divisible")
         var balance = $(this).find('.assetDropdownItem-balance').html()
         
-        assetMenuModal(asset, divisible, balance)
+        assetMenuModal(asset, asset_longname, divisible, balance)
     })
     
     
@@ -240,8 +241,9 @@ $( document ).ready(function() {
         
         var order_txid = $(this).data("txhash")
         var asset = $(this).data("asset")
+        var asset_longname = $(this).data('asset-longname');
         
-        cancelOrderModal(asset, order_txid)
+        cancelOrderModal(asset, asset_longname, order_txid)
 
     })
     
@@ -315,7 +317,7 @@ $( document ).ready(function() {
             sessionStorage.setItem("currentprice_btc", "")
             refreshTables(address)
         }
-    }, 600000) //refresh at 10 min interval
+    }, 70000) //refresh at 70 sec interval
 //    }, 15000) //for testing, 15 sec interval
    
     

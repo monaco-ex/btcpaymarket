@@ -1,7 +1,9 @@
 <?php
 
-$cp_server = 'http://public.coindaddy.io:4000/api/';
+$cp_server = 'http://api.monaparty.me:4000/';
 $cp_user = 'rpc';
-$cp_password = '1234';
+$cp_password = 'rpc';
 
+$BTC = 'MONA';
+$XCP = 'XMP';
 ?>

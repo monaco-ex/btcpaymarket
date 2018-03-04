@@ -174,7 +174,7 @@ function createIssuance_opreturn(add_from, assetid, quantity, divisible, descrip
     
     var privkey = getprivkey(add_from, mnemonic);
      
-    var source_html = "https://"+INSIGHT_SERVER+"/api/addr/"+add_from+"/utxo";     
+    var source_html = INSIGHT_API_SERVER+"/addr/"+add_from+"/utxo";     
     
     var total_utxo = new Array();   
        
@@ -232,7 +232,7 @@ function createIssuance_opreturn(add_from, assetid, quantity, divisible, descrip
 
                 var bytelength = datachunk_encoded.length / 2;
                 
-                var scriptstring = "OP_RETURN "+bytelength+" 0x"+datachunk_encoded;      
+                var scriptstring = "OP_RETURN OP_PUSHDATA1 "+bytelength+" 0x"+datachunk_encoded;
                 console.log(scriptstring);
                 
                 var data_script = new bitcore.Script(scriptstring);
@@ -250,7 +250,7 @@ function createIssuance_opreturn(add_from, assetid, quantity, divisible, descrip
 
                 console.log(satoshi_change);
 
-                if (satoshi_change > 5459) {
+                if (satoshi_change > 54600) {
                     transaction.change(add_from);
                 }
 
@@ -388,7 +388,7 @@ function createIssuance_opreturn(add_from, assetid, quantity, divisible, descrip
 //    
 //    var privkey = getprivkey(add_from, mnemonic);
 //     
-//    var source_html = "https://"+INSIGHT_SERVER+"/api/addr/"+add_from+"/utxo";
+//    var source_html = INSIGHT_API_SERVER+"/api/addr/"+add_from+"/utxo";
 //    var total_utxo = new Array();   
 //       
 //    $.getJSON( source_html, function( data ) {

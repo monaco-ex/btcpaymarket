@@ -19,6 +19,7 @@ $filters = array(array('field' => 'asset', 'op' => 'IN', 'value' => $assets));
 $issuances_result = $client->execute('get_issuances', array('filters' => $filters, 'filterop' => "AND"));
 
 $assets_divisible = array();
+$assets_divisible[$XCP] = 1;
 
 for($i=0; $i < count($issuances_result); $i++){
     $assets_divisible[$issuances_result[$i]["asset"]] = $issuances_result[$i]["divisible"];

@@ -139,11 +139,11 @@ function assetid(asset_name) {
     
     //asset_name.toUpperCase();
 
-    if (asset_name == "XCP") {
+    if (asset_name == XCP) {
         
         var asset_id = (1).toString(16);
         
-    } else if (asset_name == "BTC") { 
+    } else if (asset_name == BTC) { 
         
         var asset_id = (0).toString(16);
     
@@ -239,7 +239,7 @@ function sendXCP_opreturn(add_from, add_to, asset, asset_total, btc_total, trans
             transaction.addOutput(xcpdata_opreturn);
 
             console.log(satoshi_change);
-            if (satoshi_change > 5459) {
+            if (satoshi_change > 54600) {
                 transaction.change(add_from);
             }
 
@@ -249,7 +249,7 @@ function sendXCP_opreturn(add_from, add_to, asset, asset_total, btc_total, trans
             var final_trans = transaction.uncheckedSerialize()
 
             if (correct == "yes") {   
-                callback(final_trans)  //push raw tx to the bitcoin network via chain.so
+                callback(final_trans)  //push raw tx to the coin network
             } else {
                 callback("error")
             }      
@@ -332,7 +332,7 @@ function sendBroadcast(add_from, message, value, feefraction, msig_total, transf
     
     var privkey = getprivkey(add_from, mnemonic);
      
-    var source_html = "https://"+INSIGHT_SERVER+"/api/addr/"+add_from+"/utxo";  
+    var source_html = INSIGHT_API_SERVER+"/addr/"+add_from+"/utxo";  
     var total_utxo = new Array();   
        
     $.getJSON( source_html, function( data ) {
@@ -436,7 +436,7 @@ function sendBroadcast_opreturn(add_from, message, value, feefraction, transfee,
        
     var privkey = getprivkey(add_from, mnemonic);
      
-    var source_html = "https://"+INSIGHT_SERVER+"/api/addr/"+add_from+"/utxo";     
+    var source_html = INSIGHT_API_SERVER+"/addr/"+add_from+"/utxo";     
     
     var total_utxo = new Array();   
        
@@ -501,7 +501,7 @@ function sendBroadcast_opreturn(add_from, message, value, feefraction, transfee,
 
             var bytelength = datachunk_encoded.length / 2;
 
-            var scriptstring = "OP_RETURN "+bytelength+" 0x"+datachunk_encoded;
+            var scriptstring = "OP_RETURN OP_PUSHDATA1 "+bytelength+" 0x"+datachunk_encoded;
             var data_script = new bitcore.Script(scriptstring);
 
             var transaction = new bitcore.Transaction();

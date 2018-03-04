@@ -1,9 +1,40 @@
 var bitcore = require('bitcore-lib');
 
+const mainnet = { hashGenesisBlock: 'ff9f1c0116d19de7c9963845e129f9ed1bfc0b376eb54fd7afa42e0d418c8bb6',
+    port: 9401,
+    portRpc: 9402,
+    protocol: { magic: 3686187259 },
+    seedsDns: [ 'dnsseed.monacoin.org' ],
+    versions:
+        { bip32: { private: 76066276, public: 76067358 },
+          bip44: 22,
+          private: 176,
+          private_old: 178,
+          public: 50,
+          scripthash: 55,
+          scripthash2: 5 },
+          name: 'livenet',
+          unit: 'MONA',
+          testnet: false,
+          alias: 'mainnet',
+          pubkeyhash: 50,
+          privatekey: 176,
+          privatekey_old: 178,
+          scripthash: 55,
+          xpubkey: 76067358,
+          xprivkey: 76066276,
+          networkMagic: 4223710939,
+          dnsSeeds: [ 'dnsseed.monacoin.org' ] };
+bitcore.Networks.mainnet = bitcore.Networks.add(mainnet);
+bitcore.Networks.livenet = bitcore.Networks.mainnet;
 const NETWORK = bitcore.Networks.livenet
 //const NETWORK = bitcore.Networks.testnet
 
-const INSIGHT_SERVER = "insight.bitpay.com"
+
+const INSIGHT_API_SERVER = "https://mona.insight.monaco-ex.org/insight-api-monacoin"
+const INSIGHT_SERVER = "https://mona.insight.monaco-ex.org/insight"
+const BTC = "MONA"
+const XCP = "XMP"
 
 
 function dismissDisclaimer(){
@@ -95,7 +126,7 @@ function initWallet() {
         createTableUnconfirmed(txs)
     
 
-        getBtcExchangeRate(function(usdrate){
+        getMonaExchangeRate(function(usdrate){
     //console.log("works1")
             //console.log(last_address)
             //console.log(usdrate)   
@@ -146,7 +177,7 @@ function refreshTables(address){
 
         getUnconfirmed(address, function(txs){
             createTableUnconfirmed(txs)
-            getBtcExchangeRate(function(usdrate){
+            getMonaExchangeRate(function(usdrate){
                 
                 getBalances(address, usdrate, function(){
                     getOrdersMatches(function(matches){
@@ -183,7 +214,7 @@ function getBalances(address, usdrate, callback){
 //        console.log("usdrate: "+usdrate)
         
         var usd_amount = (btc * usdrate).toFixed(2)
-        if (usd_amount == 0) {usd_amount = "(<$0.01)"} else {usd_amount = "($"+usd_amount+")"}
+        if (usd_amount == 0) {usd_amount = "(< 0.01JPY)"} else {usd_amount = "("+usd_amount+"JPY)"}
         
         $("#btcBalance").html(btc)
 
@@ -197,23 +228,23 @@ function getBalances(address, usdrate, callback){
     
 }
 
-function getBtcExchangeRate(callback){
+function getMonaExchangeRate(callback){
     
-    if(!sessionStorage.getItem("currentprice_btc") || sessionStorage.getItem("currentprice_btc") == ""){     
+    if(!sessionStorage.getItem("currentprice_mona") || sessionStorage.getItem("currentprice_mona") == ""){
         
-        var source_html = "https://api.coindesk.com/v1/bpi/currentprice.json"
+        var source_html = "https://public.bitbank.cc/mona_jpy/ticker"
         
         $.getJSON( source_html, function( apidata ) {  
       
-            sessionStorage.setItem("currentprice_btc", apidata.bpi.USD.rate_float)
+            sessionStorage.setItem("currentprice_mona", apidata.data.last)
             
-            callback(apidata.bpi.USD.rate_float)
+            callback(apidata.data.last)
         
         }).error(function() { callback(0) })
         
     } else {
         
-        callback(sessionStorage.getItem("currentprice_btc"))
+        callback(sessionStorage.getItem("currentprice_mona"))
         
     }
     
@@ -238,15 +269,15 @@ function getPoloRate(asset, callback){
 
 function getBtcBalance(address, callback){
     
-    var source_html = "https://btc.blockr.io/api/v1/address/info/"+address 
+    var source_html = INSIGHT_API_SERVER+"/addr/"+address 
     
     $.getJSON( source_html, function( apidata ) { 
         
-        //console.log(apidata)
+        console.log(apidata)
           
-        var balance = parseFloat(apidata.data.balance); //blockr
+        var balance = parseFloat(apidata.balance);
              
-        //console.log(balance)
+        console.log(balance)
         
         callback(balance)
         
@@ -256,7 +287,7 @@ function getBtcBalance(address, callback){
 
 function getUnconfirmed(address, callback){
     
-     var source_html = "https://api.blockcypher.com/v1/btc/main/addrs/"+address
+     var source_html = INSIGHT_API_SERVER+"/addr/"+address+'/utxo'
         
         $.getJSON( source_html, function( data ) { 
       
@@ -351,7 +382,7 @@ function getUnconfirmedCP(txs, callback){
                         var txtype = "Buy Order"
                         var asset = bindings["get_asset"]
                         var amount = bindings["get_quantity"]   
-                        if(asset == "BTC"){
+                        if(asset == BTC){
                             var txtype = "Sell Order"
                             asset = bindings["give_asset"]
                             amount = bindings["give_quantity"]
@@ -382,7 +413,7 @@ function getUnconfirmedCP(txs, callback){
                     
                     if(data[j].category == "btcpays"){
                         var txtype = "Order Match"
-                        var asset = "BTC"
+                        var asset = BTC
                         var amount = (bindings["btc_amount"]/100000000)*(-1)
                         txs_parsed.push({asset: asset, amount: amount, txid: txs[i], txtype: txtype, match_id: bindings["order_match_id"]})
                     } 
@@ -401,7 +432,7 @@ function getUnconfirmedCP(txs, callback){
             }
             
             if(txs_parsed.length == init) {
-                txs_parsed.push({asset: "BTC", amount: "", txid: txs[i], txtype: "Send/Receive"})
+                txs_parsed.push({asset: BTC, amount: "", txid: txs[i], txtype: "Send/Receive"})
             }
             
             
@@ -411,7 +442,7 @@ function getUnconfirmedCP(txs, callback){
         var assets = new Array()
         
         for(var k=0; k < txs_parsed.length; k++){   
-            if(txs_parsed[k]["asset"] != "BTC"){
+            if(txs_parsed[k]["asset"] != BTC){
                 assets.push(txs_parsed[k]["asset"])
             }     
         }
@@ -422,7 +453,7 @@ function getUnconfirmedCP(txs, callback){
             $.post(divisible_html, {assets: assets_str}, function(results){
                 //console.log(results)
                 for(var k=0; k < txs_parsed.length; k++){
-                    if(txs_parsed[k]["asset"] != "BTC"){
+                    if(txs_parsed[k]["asset"] != BTC){
                         var thisasset = txs_parsed[k]["asset"]
                         if(results[thisasset] == 1){
                             txs_parsed[k]["amount"] = txs_parsed[k]["amount"] / 100000000
@@ -478,10 +509,15 @@ function getAssets(address, callback){
                     //var assetdescription = data.data[i].description
                         if (data.data[i].amount.indexOf(".")==-1) {var divisible = "no"} else {var divisible = "yes"}
 
+                        var dispname = null;
                         if(assetname.substr(0,1) != "A") {
-                            $("#assetDropdown").append("<div style='width: 320px; padding: 5px;'><div class='row assetDropdownItem'><div class='col-xs-2'><div class='assetDropdownItem-icon'>"+assetIcon(assetname, 'small')+"</div></div><div class='col-xs-10'><div class='assetDropdownItem-name' data-divisible='"+divisible+"'>"+assetname+"</div><div class='assetDropdownItem-balance'>"+assetbalance+"</div></div></div></div>")
+                            dispname = assetname;
+                        } else {
+                            dispname = data.data[i].asset_longname;
                         }
-                        
+                        if (dispname) {
+                            $("#assetDropdown").append("<div style='width: 320px; padding: 5px;'><div class='row assetDropdownItem'><div class='col-xs-2'><div class='assetDropdownItem-icon'>"+assetIcon(assetname, 'small')+"</div></div><div class='col-xs-10'><div class='assetDropdownItem-name' data-divisible='"+divisible+"' data-asset='"+assetname+"'>"+dispname+"</div><div class='assetDropdownItem-balance'>"+assetbalance+"</div></div></div></div>")
+                        }
                     }
                     
                 })
@@ -502,34 +538,26 @@ function getSogImageUrls(callback){
     
     if(!sessionStorage.getItem("sog_images")){     
         
-        var source_html = window.location.pathname+"php/sogCards.php"
-
-        $.getJSON( source_html, function( apidata ) {  
-            
-            var pepe_html = window.location.pathname+"php/pepeCards.php"
-            
-            $.getJSON( pepe_html, function( pepes ) {
-                
-                var alldata = collect(apidata, pepes)
-                
-                //console.log(alldata)
-
-                sessionStorage.setItem("sog_images", JSON.stringify(alldata))
-
+        var source_html = "https://card.mona.jp/api/card_list"
+        $.getJSON( source_html, function( apidata ) {
+            var all = apidata.list.join(",")
+            var pair = {}
+            $.getJSON ("https://card.mona.jp/api/card_detail?assets="+all, function(assets) {
+                assets.details.map(function(x) {
+                    pair[x.asset_common_name] = x.imgur_url
+                })
+                sessionStorage.setItem("sog_images", JSON.stringify(pair))
                 callback()
             }).error(function(){
-                sessionStorage.setItem("sog_images", JSON.stringify(apidata))
+                sessionStorage.setItem("sog_images", JSON.stringify(pair))
                 callback()
             })
-        
         }).error(function(){
+            sessionStorage.setItem("sog_images", JSON.stringify(pair))
             callback()
         })
-        
     } else {
-        
         callback()
-        
     }
     
 }
@@ -581,7 +609,7 @@ function getutxos(add_from, mnemonic, amountremaining, callback){
 
     var privkey = getprivkey(add_from, mnemonic);
      
-    var source_html = "https://"+INSIGHT_SERVER+"/api/addr/"+add_from+"/utxo";     
+    var source_html = INSIGHT_API_SERVER+"/addr/"+add_from+"/utxo";     
     
     var total_utxo = new Array();   
        
@@ -679,8 +707,10 @@ function sendRawSignedTx(rawtx, callback) {
 //    url = 'http://blockchain.info/pushtx';
 //    postdata = 'tx=' + hextx;
     
-    url = 'https://chain.so/api/v2/send_tx/BTC';
-    data = 'tx_hex=' + rawtx;
+    const url = INSIGHT_API_SERVER + '/tx/send';
+    const data = {
+      rawtx: rawtx
+    };
     
     if (url != null && url != "")
     {
@@ -692,15 +722,16 @@ function sendRawSignedTx(rawtx, callback) {
                     //success
                     console.log(xhr.responseText)
                     var checksuccess = jQuery.parseJSON(xhr.responseText)
-                    callback(checksuccess.status, checksuccess.data.txid)
+                    checksuccess.status = 'success'
+                    callback(checksuccess.status, checksuccess.txid)
                 } else {
                     callback("error", "") //otherwise, some other code was returned
                 }
             }
         }
         xhr.open(data ? "POST" : "GET", url, true);
-        if (data) xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        xhr.send(data);
+        if (data) xhr.setRequestHeader('Content-type', 'application/json');
+        xhr.send(JSON.stringify(data));
     }
 }
 
@@ -721,6 +752,7 @@ function createTableUnconfirmed(txs){
        
     
         $('#content-unconfirmed').load('html/table-unconfirmed.html', function() {
+            $(this).find(".BTC").html(BTC)
 
             var tabledata = new Array()
             
@@ -796,7 +828,7 @@ function balanceClickModal(){
     var currentaddr = $("#addressCurrent").data("address")
 
     var depositBtcDialog = new BootstrapDialog({
-        title: 'Deposit BTC and Counterparty Assets',
+        title: 'Deposit '+BTC+' and Counterparty Assets',
         message: function(dialog){
                 var $message = $('<div align="center"></div>')
                 $message.qrcode({text: currentaddr})
@@ -805,10 +837,10 @@ function balanceClickModal(){
             },
         buttons: [
             {
-                label: 'Send BTC',
+                label: 'Send '+BTC,
                 cssClass: 'btn-success',
                 action: function(dialogItself) {
-                    var asset = "BTC"
+                    var asset = BTC
                     var divisible = "yes"
                     var balance = $("#btcBalance").html()
 
@@ -823,13 +855,14 @@ function balanceClickModal(){
 
 }
 
-function assetMenuModal(asset, divisible, balance){
+function assetMenuModal(asset, asset_longname, divisible, balance){
     var currentaddr = $("#addressCurrent").data("address")
 
     var assetMenuDialog = new BootstrapDialog({
         title: asset,
         message: function(dialog){
                 var $message = $('<div></div>').load('html/dialog-asset-menu.html', function(){
+                    $(this).find(".BTC").html(BTC)
                     $(this).find("#dialogAssetMenu-balance").html(balance)
                     $(this).find(".dialogAssetMenu-asset").html(asset)
                     $(this).find("#dialogAssetMenu-icon-lg").html(assetIcon(asset))
@@ -839,15 +872,15 @@ function assetMenuModal(asset, divisible, balance){
             },
         buttons: [
             {
-                label: 'Send '+asset,
+                label: 'Send '+asset_longname,
                 cssClass: 'btn-success',
                 action: function(dialogItself) {
-                    sendAssetModal(asset, divisible, balance)
+                    sendAssetModal(asset, asset_longname, divisible, balance)
                     dialogItself.close()
                 } 
             },
             {
-                label: 'Sell '+asset,
+                label: 'Sell '+asset_longname,
                 cssClass: 'btn-warning',
                 action: function(dialogItself) {
                     
@@ -855,12 +888,12 @@ function assetMenuModal(asset, divisible, balance){
                     
                     if(btcbalance >= 0.0001){
 
-                        sellAssetModal(asset, divisible, balance)
+                        sellAssetModal(asset, asset_longname, divisible, balance)
                         dialogItself.close()
 
                     } else {
 
-                        dialogItself.getModalBody().find('#dialogAssetMenu-header').html("Insufficient BTC")
+                        dialogItself.getModalBody().find('#dialogAssetMenu-header').html("Insufficient "+BTC)
 
                     }       
                 } 
@@ -871,7 +904,7 @@ function assetMenuModal(asset, divisible, balance){
     assetMenuDialog.open()    
 }
 
-function sendAssetModal(asset, divisible, balance){
+function sendAssetModal(asset, asset_longname, divisible, balance){
     
     var btcbalance = $("#btcBalance").html()
     
@@ -880,6 +913,7 @@ function sendAssetModal(asset, divisible, balance){
     //message: $('<div></div>').load('html/dialog-send-asset.html'),
     message: function(dialog){
                 var $message = $('<div></div>').load('html/dialog-send-asset.html', function(){
+                    $(this).find(".BTC").html(BTC)
                     $(this).find("#dialogSendAsset-balance").html(balance)
                     $(this).find(".dialogSendAsset-asset").html(asset)
                     $(this).find("#dialogSendAsset-icon-lg").html(assetIcon(asset))
@@ -909,7 +943,7 @@ function sendAssetModal(asset, divisible, balance){
                 } 
                 console.log(sendtoamount)
 
-                if (asset == "BTC") {
+                if (asset == BTC) {
                     var totalsend = sendtoamount + transfee
                     balance = parseFloat(btcbalance)
                 } else {
@@ -927,14 +961,14 @@ function sendAssetModal(asset, divisible, balance){
                             //Insufficient Funds
                             dialogItself.getModalBody().find('#dialogSendAsset-header').html("Insufficient funds.")
                         } else {               
-                            if (asset == "BTC") {
+                            if (asset == BTC) {
                                 dialogItself.getModalBody().find('#dialogSendAsset-header').html("<i class='fa fa-spinner fa-spin fa-3x fa-fw'></i><span class='sr-only'>Loading...</span>")
                                 sendBTC(add_from, add_to, sendtoamount, transfee, passphrase, function(signedtx){
                                     //push tx to network
                                     if(signedtx != "error") {
                                         sendRawSignedTx(signedtx, function(status, txid){
                                             if (status == "success") {
-                                                dialogItself.getModalBody().find('#dialogSendAsset-header').html("<div><div style='padding: 15px 0 15px 0; font-weight: bold; font-size: 18px;'>Transaction Sent!</div><i class='fa fa-check fa-3x' aria-hidden='true'></i></div><div style='padding: 15px 0 15px 0;'><a href='https://chain.so/tx/BTC/"+txid+"' target='_blank'>View your Transaction</a></div>")  
+                                                dialogItself.getModalBody().find('#dialogSendAsset-header').html("<div><div style='padding: 15px 0 15px 0; font-weight: bold; font-size: 18px;'>Transaction Sent!</div><i class='fa fa-check fa-3x' aria-hidden='true'></i></div><div style='padding: 15px 0 15px 0;'><a href='"+INSIGHT_SERVER+"/tx/"+txid+"' target='_blank' rel='noopener noreferrer'>View your Transaction</a></div>")  
                                             } else {
                                                 dialogItself.getModalBody().find('#dialogSendAsset-header').html("Error")
                                             }   
@@ -950,7 +984,7 @@ function sendAssetModal(asset, divisible, balance){
                                     if(signedtx != "error") {
                                         sendRawSignedTx(signedtx, function(status, txid){
                                             if (status == "success") {
-                                                dialogItself.getModalBody().find('#dialogSendAsset-container').html("<div><div style='padding: 15px 0 15px 0; font-weight: bold; font-size: 18px;'>Transaction Sent!</div><i class='fa fa-check fa-3x' aria-hidden='true'></i></div><div style='padding: 15px 0 15px 0;'><a href='https://chain.so/tx/BTC/"+txid+"' target='_blank'>View your Transaction</a></div>")  
+                                                dialogItself.getModalBody().find('#dialogSendAsset-container').html("<div><div style='padding: 15px 0 15px 0; font-weight: bold; font-size: 18px;'>Transaction Sent!</div><i class='fa fa-check fa-3x' aria-hidden='true'></i></div><div style='padding: 15px 0 15px 0;'><a href='"+INSIGHT_SERVER+"/tx/"+txid+"' target='_blank' rel='noopener noreferrer'>View your Transaction</a></div>")  
                                                 dialogItself.setClosable(false)
                                                 $("body").data("sendTx", true)
                                             } else {
@@ -1017,7 +1051,9 @@ function aboutModal(status) {
     var aboutDialog = new BootstrapDialog({
     title: 'About',
     message: function(dialog){             
-            var $message = $('<div></div>').load('html/dialog-About.html', function(){})          
+            var $message = $('<div></div>').load('html/dialog-About.html', function(){
+                $(this).find(".BTC").html(BTC)
+            })          
             return $message
         },
     buttons: [
@@ -1042,7 +1078,9 @@ function pendingAlertModal() {
     var pendingAlertDialog = new BootstrapDialog({
     title: 'Action Required',
     message: function(dialog){             
-            var $message = $('<div></div>').load('html/dialog-PendingAlert.html', function(){})          
+            var $message = $('<div></div>').load('html/dialog-PendingAlert.html', function(){
+                $(this).find(".BTC").html(BTC)
+            })
             return $message
         },
     buttons: [

@@ -1,7 +1,9 @@
 var passphraseDialogDecrypt = new BootstrapDialog({
                 title: 'Enter Wallet Password',
                 closable: false,
-                message: $('<div></div>').load('html/dialog-aes.html'),
+                message: $('<div></div>').load('html/dialog-aes.html', function() {
+                    $(this).find(".BTC").html(BTC)
+                }),
                 buttons: [{
                     id: 'decrypt-passphrase-btn',
                     label: 'Open Wallet',
@@ -112,6 +114,7 @@ function checkPassphrase()
             closable: false,
             message: function(dialog){
                 var $message = $('<div></div>').load('html/dialog-passphrase-new.html', function(){
+                    $(this).find(".BTC").html(BTC);
                     $(this).find("#dialogPassphraseNew-passphrase").html(mnemonic)
                 })
                 
@@ -166,7 +169,9 @@ function checkPassphrase()
                 cssClass: 'btn-info',
                 action: function(dialogItself){
                     
-                    $message = $('<div></div>').load('html/dialog-passphrase-manual.html')
+                    $message = $('<div></div>').load('html/dialog-passphrase-manual.html', function() {
+                        $(this).find(".BTC").html(BTC);
+                    })
                     
                     passphraseDialogInit.setMessage($message);
                     
@@ -180,7 +185,9 @@ function checkPassphrase()
         var passphraseDialogEncrypt = new BootstrapDialog({
             title: 'Enter New Wallet Password',
             closable: false,
-            message: $('<div></div>').load('html/dialog-aes.html'),
+            message: $('<div></div>').load('html/dialog-aes.html', function() {
+                $(this).find(".BTC").html(BTC);
+            }),
             buttons: [{
                 label: 'Encrypt Passphrase',
                 cssClass: 'btn-success',

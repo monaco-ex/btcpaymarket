@@ -12,7 +12,7 @@ $client = new Client($cp_server);
 $client->authentication($cp_user, $cp_password);
 
 //$block = 380000;
-//$assets = array("BTC");
+//$assets = array($BTC);
 //$filters = array(array('field' => 'get_asset', 'op' => 'IN', 'value' => $assets));
 
 $filters = array();

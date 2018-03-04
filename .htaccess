@@ -1,5 +1,2 @@
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
-
 Options -Indexes
+Header add Access-Control-Allow-Origin: "*"
